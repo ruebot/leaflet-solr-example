@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+<head>
+  <title>YUDL objects with coordinates</title>
+  
+  <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css" />
+  <script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js"></script>
+  <link rel="stylesheet" href="http://leaflet.github.io/Leaflet.markercluster/dist/MarkerCluster.css" />
+	<link rel="stylesheet" href="http://leaflet.github.io/Leaflet.markercluster/dist/MarkerCluster.Default.css" />
+	<script src="http://leaflet.github.io/Leaflet.markercluster/dist/leaflet.markercluster-src.js"></script>
+</head>
+
+  <body>
+    <b>YUDL ojbects with coordinates</b>
+    <a href="https://github.com/ruebot/leaflet-solr-example" target="_blank"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub" /></a> 
+    <div id="map" style="width: 1200px;height: 600px;border: 1px solid #ccc;"></div>
+    <style type="text/css">
+      .leaflet-popup-content-wrapper .leaflet-popup-content {
+        width:auto !important;
+      }
+    </style>
+    <script type="text/javascript">
+
+      var leaflet = function(result) {
+        var tiles = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+        })
+
+        var map = L.map('map').addLayer(tiles);
+        var markers = L.markerClusterGroup();
+ 
+        result.response.docs.forEach(function(docs) {
+              var coord = docs.mods_subject_cartographics_coordinates_ms;
+              var coords = coord[0].split(",");
+              var title = docs.mods_titleInfo_title_ms;
+              var pid = docs.PID;
+              var thumbnail = "<a href='http://digital.library.yorku.ca/islandora/object/" + pid + "' target='_blank'><img src='http://digital.library.yorku.ca/islandora/object/"+ pid +"/datastream/TN/view' /></a>";
+              var solrLayer = L.marker(coords).bindPopup("<b>"+ title + "</b><br />"+ thumbnail);
+              markers.addLayer(solrLayer);
+              map.addLayer(markers);
+            });
+
+          map.fitBounds(markers.getBounds());
+      }
+
+      $.getJSON("http://digital.library.yorku.ca:8080/solr/yudl/select?q=mods_subject_cartographics_coordinates_ms%3A*&rows=6000&fl=mods_subject_cartographics_coordinates_ms%2C+mods_titleInfo_title_ms%2C+PID&wt=json&json.wrf=?&indent=true&callback=?", leaflet);
+
+    </script>
+  </body>
+</html>
